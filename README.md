@@ -114,9 +114,9 @@ https://pjt-dashboard-worker.jimmyjib-dev.workers.dev/auth/login
 
 - [x] D1 스키마
 - [x] Worker (인증 · CRUD · Drive 업로드/버전/다운로드 프록시)
-- [ ] `index.html` — 프로젝트 목록 · 상세 · **파일 버전 히스토리 UI**
-- [ ] 대시보드 (상태별 카드 · 카테고리 도넛 · 마감 임박)
-- [ ] 통합 검색 화면
+- [x] `index.html` — 프로젝트 목록 · 상세 · **파일 버전 히스토리 UI**
+- [x] 대시보드 (상태별 카드 · 기한초과 · 마감임박 · 최근 기록)
+- [x] 통합 검색 화면
 - [ ] 칸반 보드
 - [ ] OneNote 자동 이관 스크립트
 

@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PJT — IT 프로젝트 관리</title>
+<link rel="stylesheet" as="style" crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* ==========================================================================
+   PJT — 디자인 토큰
+   카테고리 색 25종이 DB 에서 내려오므로, 껍데기는 무채색으로 묶어두고
+   색은 전부 카테고리 스파인에만 씁니다. (OneNote 섹션 탭의 색 띠 계승)
+   ========================================================================== */
+:root{
+  --ink:      #14181f;
+  --graphite: #5c6672;
+  --mute:     #8b95a3;
+  --rule:     #dfe3e9;
+  --rule-soft:#eef1f5;
+  --paper:    #f5f6f8;
+  --card:     #ffffff;
+  --signal:   #4a2fbd;
+  --signal-w: #efecfb;
+  --alert:    #c0342b;
+  --alert-w:  #fdeceb;
+
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --r: 6px;
+  --shadow: 0 1px 2px rgba(20,24,31,.05), 0 8px 24px rgba(20,24,31,.06);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;
+  background:var(--paper); color:var(--ink);
+  font-size:13px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+a{color:var(--signal);text-decoration:none}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:3px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.hidden{display:none !important}
+
+/* ---------- 라벨 ---------- */
+.eyebrow{
+  font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--mute);
+}
+
+/* ==================== 로그인 ==================== */
+#gate{
+  height:100%;display:flex;align-items:center;justify-content:center;
+  background:var(--paper);
+}
+.gate-card{
+  width:min(360px,90vw);background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--r);padding:38px 32px;box-shadow:var(--shadow);
+}
+.gate-mark{
+  font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-.02em;
+  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.gate-mark i{width:5px;height:26px;background:var(--signal);border-radius:2px;display:block}
+.gate-card p{color:var(--graphite);margin-bottom:26px;font-size:12.5px}
+.btn-primary{
+  width:100%;background:var(--ink);color:#fff;border-radius:var(--r);
+  padding:11px;font-weight:600;font-size:13px;transition:background .15s;
+}
+.btn-primary:hover{background:#2b323d}
+#gate-msg{margin-top:16px;font-size:12px;color:var(--alert);min-height:16px}
+
+/* ==================== 셸 ==================== */
+#app{height:100%;display:grid;grid-template-rows:52px 1fr;grid-template-columns:216px 1fr}
+
+/* ---------- 상단바 ---------- */
+header{
+  grid-column:1/-1;display:flex;align-items:center;gap:14px;
+  padding:0 16px;background:var(--card);border-bottom:1px solid var(--rule);
+  position:sticky;top:0;z-index:40;
+}
+.brand{
+  font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:-.01em;
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.brand i{width:4px;height:18px;background:var(--signal);border-radius:2px;display:block}
+.search-wrap{flex:1;max-width:460px;position:relative}
+.search-wrap input{
+  width:100%;padding:7px 11px 7px 30px;border:1px solid var(--rule);
+  border-radius:var(--r);background:var(--paper);font-size:12.5px;
+}
+.search-wrap input:focus{background:var(--card);border-color:var(--signal);outline:none}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--mute)}
+.spacer{flex:1}
+.who{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--graphite)}
+.who button{color:var(--mute);font-size:11.5px}
+.who button:hover{color:var(--alert)}
+
+/* ---------- 사이드바 ---------- */
+aside{
+  background:var(--card);border-right:1px solid var(--rule);
+  overflow-y:auto;padding:14px 0 40px;
+}
+.nav-group{margin-bottom:20px}
+.nav-group > .eyebrow{padding:0 16px 7px}
+.nav-item{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  padding:6px 16px;font-size:12.5px;color:var(--graphite);
+  border-left:2px solid transparent;transition:background .12s;
+}
+.nav-item:hover{background:var(--rule-soft)}
+.nav-item.on{background:var(--signal-w);color:var(--ink);font-weight:600;border-left-color:var(--signal)}
+.nav-item .spine{width:3px;height:13px;border-radius:2px;flex-shrink:0}
+.nav-item .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-item .ct{font-family:var(--mono);font-size:11px;color:var(--mute)}
+
+/* ---------- 본문 ---------- */
+main{overflow-y:auto;padding:22px 26px 60px}
+.page-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.page-head h1{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.page-head .sub{font-size:12px;color:var(--mute)}
+.page-head .spacer{flex:1}
+
+.btn{
+  border:1px solid var(--rule);border-radius:var(--r);padding:6px 12px;
+  font-size:12.5px;font-weight:600;background:var(--card);transition:.12s;
+}
+.btn:hover{border-color:var(--graphite)}
+.btn-dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-dark:hover{background:#2b323d;border-color:#2b323d}
+.btn-sm{padding:4px 9px;font-size:11.5px;font-weight:500}
+
+/* ---------- 통계 카드 ---------- */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:22px}
+.stat{
+  background:var(--card);border:1px solid var(--rule);border-radius:var(--r);
+  padding:13px 15px;text-align:left;transition:.12s;
+}
+.stat:hover{border-color:var(--graphite);transform:translateY(-1px)}
+.stat .n{font-family:var(--mono);font-size:26px;font-weight:700;line-height:1.1;letter-spacing:-.03em}
+.stat .l{font-size:11.5px;color:var(--graphite);margin-top:3px}
+.stat.warn .n{color:var(--alert)}
+
+/* ---------- 섹션 ---------- */
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);margin-bottom:20px}
+.panel-head{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 15px;border-bottom:1px solid var(--rule-soft);
+}
+.panel-head h2{font-size:13px;font-weight:700}
+.panel-body{padding:4px 0}
+.empty{padding:34px 16px;text-align:center;color:var(--mute);font-size:12.5px}
+.empty b{display:block;color:var(--graphite);font-weight:600;margin-bottom:4px}
+
+/* ---------- 프로젝트 행 ---------- */
+.prow{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:9px 15px;border-bottom:1px solid var(--rule-soft);transition:background .12s;
+}
+.prow:last-child{border-bottom:none}
+.prow:hover{background:var(--rule-soft)}
+.prow .spine{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:30px}
+.prow .code{font-family:var(--mono);font-size:11px;color:var(--mute);width:118px;flex-shrink:0}
+.prow .ttl{flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .cat{font-size:11px;color:var(--mute);width:130px;flex-shrink:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .due{font-family:var(--mono);font-size:11.5px;color:var(--graphite);width:92px;flex-shrink:0;text-align:right}
+.prow .due.over{color:var(--alert);font-weight:700}
+
+.pill{
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;
+  flex-shrink:0;white-space:nowrap;color:#28303b;
+}
+.prio{font-size:10px;font-weight:700;width:16px;text-align:center;flex-shrink:0}
+.prio.High{color:var(--alert)}
+.prio.Medium{color:#b0761b}
+.prio.Low{color:var(--mute)}
+
+.bar{width:52px;height:3px;background:var(--rule);border-radius:2px;flex-shrink:0;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--signal);border-radius:2px}
+
+/* ---------- 피드 ---------- */
+.feed{padding:4px 15px 10px}
+.feed li{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--rule-soft);list-style:none}
+.feed li:last-child{border-bottom:none}
+.feed .d{font-family:var(--mono);font-size:11px;color:var(--mute);width:78px;flex-shrink:0}
+.feed .t{flex:1;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed .c{font-family:var(--mono);font-size:10.5px;color:var(--mute);flex-shrink:0}
+
+/* ==================== 상세 슬라이드오버 ==================== */
+#scrim{position:fixed;inset:0;background:rgba(20,24,31,.32);z-index:50;opacity:0;
+  transition:opacity .18s;pointer-events:none}
+#scrim.on{opacity:1;pointer-events:auto}
+#detail{
+  position:fixed;top:0;right:0;bottom:0;width:min(620px,100vw);
+  background:var(--card);border-left:1px solid var(--rule);z-index:51;
+  transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+}
+#detail.on{transform:none}
+.d-head{padding:16px 20px 0;border-bottom:1px solid var(--rule)}
+.d-top{display:flex;align-items:flex-start;gap:11px;margin-bottom:12px}
+.d-top .spine{width:4px;align-self:stretch;border-radius:2px;min-height:38px}
+.d-top .grow{flex:1;min-width:0}
+.d-top h2{font-size:16px;font-weight:700;letter-spacing:-.01em;margin-bottom:3px}
+.d-top .meta{font-family:var(--mono);font-size:11px;color:var(--mute)}
+.d-close{font-size:19px;color:var(--mute);line-height:1;padding:2px 6px}
+.d-close:hover{color:var(--ink)}
+.tabs{display:flex;gap:2px}
+.tab{
+  padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--mute);
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.tab.on{color:var(--ink);border-bottom-color:var(--signal)}
+.tab .n{font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-left:4px}
+.d-body{flex:1;overflow-y:auto;padding:18px 20px 50px}
+
+/* ---------- 필드 ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--graphite);margin-bottom:4px}
+.field input[type=text],.field input[type=date],.field input[type=number],
+.field select,.field textarea{
+  width:100%;padding:6px 9px;border:1px solid var(--rule);border-radius:var(--r);
+  background:var(--card);font-size:12.5px;
+}
+.field textarea{resize:vertical;min-height:64px;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--signal);outline:none}
+/* 체크박스는 위 100% 규칙에서 제외 — RCD 때 273px 로 늘어났던 버그 */
+.field input[type=checkbox],.field input[type=file]{width:auto}
+
+/* ---------- 타임라인 ---------- */
+.tl{list-style:none;position:relative;padding-left:16px}
+.tl::before{content:"";position:absolute;left:3px;top:5px;bottom:5px;width:1px;background:var(--rule)}
+.tl li{position:relative;padding:0 0 16px}
+.tl li::before{
+  content:"";position:absolute;left:-16px;top:5px;width:7px;height:7px;
+  border-radius:50%;background:var(--card);border:2px solid var(--rule);
+}
+.tl li.hi::before{border-color:var(--signal);background:var(--signal)}
+.tl .hd{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap}
+.tl .dt{font-family:var(--mono);font-size:11px;color:var(--mute)}
+.tl .tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;
+  background:var(--rule-soft);color:var(--graphite)}
+.tl .ti{font-size:12.5px;font-weight:600}
+.tl .bd{font-size:12.5px;color:var(--graphite);white-space:pre-wrap;word-break:break-word;
+  max-height:150px;overflow:hidden;position:relative}
+.tl .bd.open{max-height:none}
+.tl .more{font-size:11px;color:var(--signal);font-weight:600;margin-top:3px}
+
+/* ==================== 파일 · 버전 사다리 (핵심) ==================== */
+.file{border:1px solid var(--rule);border-radius:var(--r);margin-bottom:9px;overflow:hidden}
+.file-hd{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px}
+.file-hd:hover{background:var(--rule-soft)}
+.file-hd .nm{flex:1;font-size:12.5px;font-weight:500;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.file-hd .dt{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:3px;
+  background:var(--rule-soft);color:var(--graphite);flex-shrink:0}
+.vbadge{
+  font-family:var(--mono);font-size:11px;font-weight:700;padding:1px 7px;
+  border-radius:3px;background:var(--signal-w);color:var(--signal);flex-shrink:0;
+}
+.file-hd .sz{font-family:var(--mono);font-size:10.5px;color:var(--mute);flex-shrink:0}
+.file-hd .chev{color:var(--mute);font-size:10px;transition:transform .15s;flex-shrink:0}
+.file-hd.open .chev{transform:rotate(90deg)}
+
+/* 버전 사다리 — 최신이 위, git log 처럼 세로로 쌓입니다 */
+.ladder{border-top:1px solid var(--rule-soft);background:#fbfcfd;padding:8px 12px 10px;
+  list-style:none}
+.ladder li{display:flex;align-items:center;gap:10px;padding:5px 0 5px 15px;position:relative}
+.ladder li::before{
+  content:"";position:absolute;left:3px;top:0;bottom:0;width:2px;background:var(--rule);
+}
+.ladder li:first-child::before{top:11px;border-radius:2px 2px 0 0}
+.ladder li:last-child::before{bottom:calc(100% - 13px);border-radius:0 0 2px 2px}
+.ladder li:only-child::before{top:11px;bottom:calc(100% - 13px)}
+.ladder li::after{
+  content:"";position:absolute;left:0;top:9px;width:8px;height:8px;border-radius:50%;
+  background:var(--card);border:2px solid var(--rule);
+}
+.ladder li.head::after{border-color:var(--signal);background:var(--signal)}
+.ladder li.head::before{background:var(--signal)}
+.ladder .v{font-family:var(--mono);font-size:11.5px;font-weight:700;width:28px;flex-shrink:0;
+  color:var(--graphite)}
+.ladder li.head .v{color:var(--signal)}
+.ladder .when{font-family:var(--mono);font-size:11px;color:var(--mute);width:82px;flex-shrink:0}
+.ladder .note{flex:1;font-size:11.5px;color:var(--graphite);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.ladder .note.none{color:var(--mute);font-style:italic}
+.ladder .kb{font-family:var(--mono);font-size:10.5px;color:var(--mute);flex-shrink:0}
+.ladder a{font-size:11px;font-weight:600;flex-shrink:0}
+
+.drop{
+  border:1.5px dashed var(--rule);border-radius:var(--r);padding:16px;text-align:center;
+  color:var(--mute);font-size:12px;transition:.15s;margin-top:4px;
+}
+.drop.hot{border-color:var(--signal);background:var(--signal-w);color:var(--signal)}
+
+/* ---------- 작업 ---------- */
+.task{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--rule-soft)}
+.task:last-of-type{border-bottom:none}
+.task input[type=checkbox]{width:14px;height:14px;accent-color:var(--signal);flex-shrink:0}
+.task .tt{flex:1;font-size:12.5px}
+.task.done .tt{color:var(--mute);text-decoration:line-through}
+.task .dd{font-family:var(--mono);font-size:11px;color:var(--mute)}
+.task .dd.over{color:var(--alert);font-weight:700}
+
+/* ==================== 모달 ==================== */
+#modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  background:rgba(20,24,31,.32);padding:20px}
+.modal-card{
+  background:var(--card);border-radius:var(--r);width:min(520px,100%);
+  max-height:88vh;overflow-y:auto;box-shadow:var(--shadow);
+}
+.modal-hd{padding:16px 20px 12px;border-bottom:1px solid var(--rule-soft);
+  display:flex;align-items:center}
+.modal-hd h3{font-size:14px;font-weight:700;flex:1}
+.modal-bd{padding:16px 20px}
+.modal-ft{padding:12px 20px 16px;display:flex;gap:8px;justify-content:flex-end}
+
+/* ---------- 검색 결과 ---------- */
+.sr{display:flex;gap:11px;width:100%;text-align:left;padding:10px 15px;
+  border-bottom:1px solid var(--rule-soft)}
+.sr:hover{background:var(--rule-soft)}
+.sr .kind{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--mute);width:52px;flex-shrink:0;padding-top:2px}
+.sr .grow{flex:1;min-width:0}
+.sr .t{font-size:12.5px;font-weight:600;margin-bottom:2px}
+.sr .x{font-size:11.5px;color:var(--graphite);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.sr mark{background:#fdf0b8;color:inherit;border-radius:2px;padding:0 1px}
+.sr .cd{font-family:var(--mono);font-size:10.5px;color:var(--mute);flex-shrink:0}
+
+/* ---------- 토스트 ---------- */
+#toast{
+  position:fixed;bottom:20px;left:50%;transform:translate(-50%,60px);
+  background:var(--ink);color:#fff;padding:9px 16px;border-radius:var(--r);
+  font-size:12.5px;z-index:80;opacity:0;transition:.22s;pointer-events:none;
+  max-width:80vw;
+}
+#toast.on{transform:translate(-50%,0);opacity:1}
+#toast.bad{background:var(--alert)}
+
+/* ---------- 반응형 ---------- */
+@media (max-width:820px){
+  #app{grid-template-columns:1fr;grid-template-rows:52px auto 1fr}
+  aside{grid-column:1;border-right:none;border-bottom:1px solid var(--rule);
+    max-height:180px;padding:10px 0}
+  main{padding:16px 14px 60px}
+  .prow .cat,.prow .code{display:none}
+  .prow .due{width:auto}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 로그인 ==================== -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-mark"><i></i>PJT</div>
+    <p>IT 프로젝트 관리</p>
+    <button class="btn-primary" id="btn-login">Google 계정으로 로그인</button>
+    <div id="gate-msg"></div>
+  </div>
+</div>
+
+<!-- ==================== 앱 ==================== -->
+<div id="app" class="hidden">
+  <header>
+    <div class="brand"><i></i>PJT</div>
+    <div class="search-wrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+      </svg>
+      <input id="q" type="text" placeholder="프로젝트 · 진행기록 · 파일 검색" autocomplete="off">
+    </div>
+    <div class="spacer"></div>
+    <div class="who">
+      <span id="who-name"></span>
+      <button id="btn-logout">로그아웃</button>
+    </div>
+  </header>
+
+  <aside>
+    <div class="nav-group">
+      <div class="eyebrow">보기</div>
+      <button class="nav-item on" data-view="dash"><span class="nm">대시보드</span></button>
+      <button class="nav-item" data-view="list" data-status=""><span class="nm">전체 프로젝트</span><span class="ct" id="ct-all"></span></button>
+    </div>
+    <div class="nav-group">
+      <div class="eyebrow">상태</div>
+      <div id="nav-status"></div>
+    </div>
+    <div class="nav-group">
+      <div class="eyebrow">카테고리</div>
+      <div id="nav-cat"></div>
+    </div>
+  </aside>
+
+  <main id="main"></main>
+</div>
+
+<!-- ==================== 상세 ==================== -->
+<div id="scrim"></div>
+<div id="detail">
+  <div class="d-head">
+    <div class="d-top">
+      <div class="spine" id="d-spine"></div>
+      <div class="grow">
+        <h2 id="d-title"></h2>
+        <div class="meta" id="d-meta"></div>
+      </div>
+      <button class="d-close" id="d-close" aria-label="닫기">&times;</button>
+    </div>
+    <div class="tabs">
+      <button class="tab on" data-tab="info">정보</button>
+      <button class="tab" data-tab="tl">진행기록<span class="n" id="n-tl"></span></button>
+      <button class="tab" data-tab="file">파일<span class="n" id="n-file"></span></button>
+      <button class="tab" data-tab="task">작업<span class="n" id="n-task"></span></button>
+    </div>
+  </div>
+  <div class="d-body" id="d-body"></div>
+</div>
+
+<div id="modal" class="hidden"></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ==========================================================================
+   설정
+   ========================================================================== */
+const API = 'https://pjt-dashboard-worker.jimmyjib-dev.workers.dev';
+
+/* ==========================================================================
+   유틸
+   ========================================================================== */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+/** XSS 차단 — 사용자 입력은 예외 없이 이걸 거칩니다 */
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/** 로컬 기준 YYYY-MM-DD. toISOString() 은 UTC 라 한국 새벽에 하루 밀립니다. */
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+/** 'YYYY-MM-DD' 를 로컬 자정으로 파싱 (new Date(문자열) 은 UTC 해석이라 씀) */
+function parseYMD(s) {
+  if (!s) return null;
+  const m = String(s).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? new Date(+m[1], +m[2]-1, +m[3]) : null;
+}
+function dday(s) {
+  const d = parseYMD(s); if (!d) return null;
+  const t = parseYMD(today());
+  return Math.round((d - t) / 86400000);
+}
+function ddayText(s) {
+  const n = dday(s); if (n === null) return '';
+  if (n === 0) return 'D-DAY';
+  return n > 0 ? `D-${n}` : `+${-n}일`;
+}
+const fmtDate = s => s ? String(s).slice(0,10) : '';
+const fmtKB = n => n == null ? '' : (n >= 1024 ? (n/1024).toFixed(1)+' MB' : n+' KB');
+
+let toastTimer;
+function toast(msg, bad) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.toggle('bad', !!bad);
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, { credentials:'include', ...opts });
+  if (res.status === 401) { showGate('세션이 만료됐습니다. 다시 로그인해주세요.'); throw new Error('401'); }
+  if (!res.ok) {
+    let m = res.statusText;
+    try { m = (await res.json()).error || m; } catch {}
+    throw new Error(m);
+  }
+  return res.status === 204 ? null : res.json();
+}
+const apiJSON = (path, method, body) =>
+  api(path, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+
+/* ==========================================================================
+   상태
+   ========================================================================== */
+const S = {
+  me:null,
+  cfg:{ category:[], status:[], priority:[], doc_type:[] },
+  projects:[],
+  view:'dash',
+  filter:{ status:'', category:'' },
+  cur:null,
+  tab:'info',
+  openFiles:new Set(),
+};
+const catColor = v => (S.cfg.category.find(c => c.value === v) || {}).color || '#94a3b8';
+const statusMeta = v => S.cfg.status.find(c => c.value === v) || { label:v, color:'#e5e7eb' };
+
+/* ==========================================================================
+   부팅
+   ========================================================================== */
+function showGate(msg) {
+  $('#gate').classList.remove('hidden');
+  $('#app').classList.add('hidden');
+  $('#gate-msg').textContent = msg || '';
+}
+
+$('#btn-login').onclick = () => { location.href = API + '/auth/login'; };
+$('#btn-logout').onclick = () => { location.href = API + '/auth/logout'; };
+
+(async function boot() {
+  try {
+    const me = await api('/api/me');
+    S.me = me.user;
+  } catch { showGate(); return; }
+
+  $('#gate').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  $('#who-name').textContent = S.me.name || S.me.email;
+
+  const cfg = await api('/api/config');
+  for (const r of cfg.config) (S.cfg[r.group_name] ||= []).push(r);
+
+  buildNav();
+  await loadProjects();
+  renderDash();
+})();
+
+/* ==========================================================================
+   사이드바
+   ========================================================================== */
+function buildNav() {
+  $('#nav-status').innerHTML = S.cfg.status.map(s => `
+    <button class="nav-item" data-view="list" data-status="${esc(s.value)}">
+      <span class="spine" style="background:${esc(s.color)}"></span>
+      <span class="nm">${esc(s.label)}</span>
+      <span class="ct" data-ct-status="${esc(s.value)}"></span>
+    </button>`).join('');
+
+  $('#nav-cat').innerHTML = S.cfg.category.map(c => `
+    <button class="nav-item" data-view="list" data-category="${esc(c.value)}">
+      <span class="spine" style="background:${esc(c.color)}"></span>
+      <span class="nm">${esc(c.value)}</span>
+      <span class="ct" data-ct-cat="${esc(c.value)}"></span>
+    </button>`).join('');
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.nav-item');
+    if (!b) return;
+    $$('.nav-item').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    S.filter = { status: b.dataset.status || '', category: b.dataset.category || '' };
+    S.view = b.dataset.view;
+    S.view === 'dash' ? renderDash() : renderList();
+  });
+}
+
+function updateCounts() {
+  const all = S.projects.filter(p => !p.is_archived);
+  $('#ct-all').textContent = all.length || '';
+  $$('[data-ct-status]').forEach(el => {
+    const n = all.filter(p => p.status === el.dataset.ctStatus).length;
+    el.textContent = n || '';
+  });
+  $$('[data-ct-cat]').forEach(el => {
+    const n = all.filter(p => p.category === el.dataset.ctCat).length;
+    el.textContent = n || '';
+  });
+}
+
+async function loadProjects() {
+  const r = await api('/api/projects');
+  S.projects = r.projects;
+  updateCounts();
+}
+
+/* ==========================================================================
+   대시보드
+   ========================================================================== */
+async function renderDash() {
+  const m = $('#main');
+  m.innerHTML = `<div class="page-head"><h1>대시보드</h1>
+    <span class="sub">${esc(today())}</span><div class="spacer"></div>
+    <button class="btn btn-dark" id="btn-new">프로젝트 추가</button></div>
+    <div id="dash-body"><div class="empty">불러오는 중…</div></div>`;
+  $('#btn-new').onclick = openNewModal;
+
+  let d;
+  try { d = await api('/api/stats'); }
+  catch (e) { $('#dash-body').innerHTML = `<div class="empty"><b>통계를 불러오지 못했습니다</b>${esc(e.message)}</div>`; return; }
+
+  const cnt = v => (d.byStatus.find(x => x.status === v) || {}).n || 0;
+  const soon = S.projects.filter(p => {
+    const n = dday(p.target_date);
+    return n !== null && n >= 0 && n <= 14 && !['Completed','Dropped'].includes(p.status);
+  }).sort((a,b) => (a.target_date||'').localeCompare(b.target_date||''));
+
+  $('#dash-body').innerHTML = `
+    <div class="stat-row">
+      <button class="stat" data-jump="In-Progress"><div class="n">${cnt('In-Progress')}</div><div class="l">진행중</div></button>
+      <button class="stat" data-jump="Discussion"><div class="n">${cnt('Discussion')}</div><div class="l">논의중</div></button>
+      <button class="stat" data-jump="On-Hold"><div class="n">${cnt('On-Hold')}</div><div class="l">보류</div></button>
+      <button class="stat" data-jump="Completed"><div class="n">${cnt('Completed')}</div><div class="l">완료</div></button>
+      <div class="stat warn"><div class="n">${d.overdue.length}</div><div class="l">기한 초과</div></div>
+    </div>
+
+    ${d.overdue.length ? `<div class="panel">
+      <div class="panel-head"><h2>기한이 지났습니다</h2></div>
+      <div class="panel-body">${d.overdue.map(p => rowHTML(findP(p.id) || p)).join('')}</div>
+    </div>` : ''}
+
+    <div class="panel">
+      <div class="panel-head"><h2>2주 안에 마감</h2><div class="spacer"></div>
+        <span class="eyebrow">${soon.length}건</span></div>
+      <div class="panel-body">${soon.length
+        ? soon.map(rowHTML).join('')
+        : `<div class="empty"><b>마감 임박 항목이 없습니다</b>목표일이 설정된 프로젝트가 여기 표시됩니다.</div>`}</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>최근 진행기록</h2></div>
+      ${d.recentUpdates.length ? `<ul class="feed">${d.recentUpdates.map(u => `
+        <li data-open="${u.project_id ?? ''}">
+          <span class="d">${esc(fmtDate(u.update_date))}</span>
+          <span class="t">${esc(u.title || u.project_title)}</span>
+          <span class="c">${esc(u.code || '')}</span>
+        </li>`).join('')}</ul>`
+        : `<div class="empty"><b>기록이 없습니다</b>프로젝트를 열어 진행기록을 남겨보세요.</div>`}
+    </div>`;
+
+  $$('[data-jump]').forEach(b => b.onclick = () => {
+    const t = $(`.nav-item[data-status="${b.dataset.jump}"]`);
+    if (t) t.click();
+  });
+  wireRows();
+}
+
+const findP = id => S.projects.find(p => p.id === id);
+
+/* ==========================================================================
+   목록
+   ========================================================================== */
+function rowHTML(p) {
+  const st = statusMeta(p.status);
+  const n  = dday(p.target_date);
+  const over = n !== null && n < 0 && !['Completed','Dropped'].includes(p.status);
+  return `<button class="prow" data-open="${p.id}">
+    <span class="spine" style="background:${esc(catColor(p.category))}"></span>
+    <span class="code">${esc(p.code)}</span>
+    <span class="prio ${esc(p.priority)}" title="우선순위 ${esc(p.priority)}">${p.priority==='High'?'▲':p.priority==='Low'?'▽':'●'}</span>
+    <span class="ttl">${esc(p.title)}</span>
+    <span class="cat">${esc(p.category)}</span>
+    <span class="pill" style="background:${esc(st.color)}">${esc(st.label)}</span>
+    <span class="bar"><i style="width:${Math.max(0,Math.min(100,p.progress||0))}%"></i></span>
+    <span class="due ${over?'over':''}">${p.target_date ? esc(fmtDate(p.target_date))+' '+esc(ddayText(p.target_date)) : '—'}</span>
+  </button>`;
+}
+
+function renderList() {
+  const f = S.filter;
+  let list = S.projects.filter(p => !p.is_archived);
+  if (f.status)   list = list.filter(p => p.status === f.status);
+  if (f.category) list = list.filter(p => p.category === f.category);
+
+  const label = f.status ? statusMeta(f.status).label : f.category || '전체 프로젝트';
+
+  $('#main').innerHTML = `
+    <div class="page-head"><h1>${esc(label)}</h1>
+      <span class="sub">${list.length}건</span><div class="spacer"></div>
+      <button class="btn btn-dark" id="btn-new">프로젝트 추가</button></div>
+    <div class="panel"><div class="panel-body">${list.length
+      ? list.map(rowHTML).join('')
+      : `<div class="empty"><b>해당하는 프로젝트가 없습니다</b>오른쪽 위 버튼으로 새로 추가할 수 있습니다.</div>`}
+    </div></div>`;
+  $('#btn-new').onclick = openNewModal;
+  wireRows();
+}
+
+function wireRows() {
+  $$('[data-open]').forEach(el => el.onclick = () => {
+    const id = Number(el.dataset.open);
+    if (id) openDetail(id);
+  });
+}
+
+/* ==========================================================================
+   검색
+   ========================================================================== */
+let qTimer;
+$('#q').addEventListener('input', e => {
+  clearTimeout(qTimer);
+  const q = e.target.value.trim();
+  if (q.length < 2) return;
+  qTimer = setTimeout(() => runSearch(q), 280);
+});
+
+async function runSearch(q) {
+  $$('.nav-item').forEach(x => x.classList.remove('on'));
+  $('#main').innerHTML = `<div class="page-head"><h1>검색</h1>
+    <span class="sub">${esc(q)}</span></div>
+    <div class="panel"><div class="panel-body"><div class="empty">찾는 중…</div></div></div>`;
+
+  let r;
+  try { r = await api('/api/search?q=' + encodeURIComponent(q)); }
+  catch (e) { toast(e.message, true); return; }
+
+  const KIND = { project:'프로젝트', update:'기록', file:'파일' };
+  $('#main').innerHTML = `<div class="page-head"><h1>검색</h1>
+    <span class="sub">${esc(q)} · ${r.results.length}건</span></div>
+    <div class="panel"><div class="panel-body">${r.results.length
+      ? r.results.map(x => `<button class="sr" data-open="${x.project_id}">
+          <span class="kind">${esc(KIND[x.entity_type] || x.entity_type)}</span>
+          <span class="grow"><div class="t">${esc(x.title)}</div>
+            <div class="x">${sanitizeExcerpt(x.excerpt)}</div></span>
+          <span class="cd">${esc(x.project_code || '')}</span>
+        </button>`).join('')
+      : `<div class="empty"><b>결과가 없습니다</b>두 글자 이상으로 다시 검색해보세요.</div>`}
+    </div></div>`;
+  wireRows();
+}
+
+/** FTS snippet 의 <mark> 만 살리고 나머지는 전부 이스케이프 */
+function sanitizeExcerpt(s) {
+  return esc(s || '').replace(/&lt;mark&gt;/g,'<mark>').replace(/&lt;\/mark&gt;/g,'</mark>');
+}
+
+/* ==========================================================================
+   상세
+   ========================================================================== */
+function closeDetail() {
+  $('#detail').classList.remove('on');
+  $('#scrim').classList.remove('on');
+  S.cur = null;
+}
+$('#d-close').onclick = closeDetail;
+$('#scrim').onclick = closeDetail;
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if (!$('#modal').classList.contains('hidden')) closeModal(); else closeDetail(); }
+});
+$$('.tab').forEach(t => t.onclick = () => {
+  $$('.tab').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  S.tab = t.dataset.tab;
+  renderTab();
+});
+
+async function openDetail(id) {
+  $('#detail').classList.add('on');
+  $('#scrim').classList.add('on');
+  $('#d-body').innerHTML = `<div class="empty">불러오는 중…</div>`;
+
+  try { S.cur = await api('/api/projects/' + id); }
+  catch (e) { $('#d-body').innerHTML = `<div class="empty"><b>불러오지 못했습니다</b>${esc(e.message)}</div>`; return; }
+
+  const p = S.cur.project;
+  $('#d-spine').style.background = catColor(p.category);
+  $('#d-title').textContent = p.title;
+  $('#d-meta').textContent = `${p.code} · ${p.category}`;
+  $('#n-tl').textContent   = S.cur.updates.length || '';
+  $('#n-file').textContent = S.cur.files.length || '';
+  $('#n-task').textContent = S.cur.tasks.length || '';
+  S.openFiles.clear();
+  renderTab();
+}
+
+function renderTab() {
+  if (!S.cur) return;
+  ({ info:tabInfo, tl:tabTimeline, file:tabFiles, task:tabTasks })[S.tab]();
+}
+
+/* ---------- 정보 ---------- */
+function tabInfo() {
+  const p = S.cur.project;
+  const opts = (arr, cur, useLabel) => arr.map(o =>
+    `<option value="${esc(o.value)}"${o.value===cur?' selected':''}>${esc(useLabel?o.label:o.value)}</option>`).join('');
+
+  $('#d-body').innerHTML = `
+    <div class="field"><label>제목</label><input type="text" id="f-title" value="${esc(p.title)}"></div>
+    <div class="grid2">
+      <div class="field"><label>카테고리</label><select id="f-category">${opts(S.cfg.category,p.category)}</select></div>
+      <div class="field"><label>상태</label><select id="f-status">${opts(S.cfg.status,p.status,true)}</select></div>
+      <div class="field"><label>우선순위</label><select id="f-priority">${opts(S.cfg.priority,p.priority,true)}</select></div>
+      <div class="field"><label>진행률 (%)</label><input type="number" id="f-progress" min="0" max="100" value="${p.progress ?? 0}"></div>
+      <div class="field"><label>시작일</label><input type="date" id="f-start_date" value="${esc(fmtDate(p.start_date))}"></div>
+      <div class="field"><label>목표일</label><input type="date" id="f-target_date" value="${esc(fmtDate(p.target_date))}"></div>
+      <div class="field"><label>담당자</label><input type="text" id="f-owner" value="${esc(p.owner)}"></div>
+      <div class="field"><label>업체</label><input type="text" id="f-vendor" value="${esc(p.vendor)}"></div>
+    </div>
+    <div class="field"><label>요약</label><textarea id="f-summary">${esc(p.summary)}</textarea></div>
+    <div class="grid2">
+      <div class="field"><label>태그</label><input type="text" id="f-tags" value="${esc(p.tags)}" placeholder="쉼표로 구분"></div>
+      <div class="field"><label>연관 시스템</label><input type="text" id="f-related_systems" value="${esc(p.related_systems)}"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-dark" id="f-save">변경사항 저장</button>
+      <div style="flex:1"></div>
+      <button class="btn" id="f-archive">보관함으로</button>
+    </div>`;
+
+  $('#f-save').onclick = async () => {
+    const body = {};
+    for (const k of ['title','category','status','priority','progress','start_date',
+                     'target_date','owner','vendor','summary','tags','related_systems']) {
+      const el = $('#f-' + k); if (!el) continue;
+      body[k] = k === 'progress' ? Number(el.value || 0) : (el.value || null);
+    }
+    try {
+      await apiJSON('/api/projects/' + S.cur.project.id, 'PATCH', body);
+      toast('저장했습니다');
+      await loadProjects();
+      await openDetail(S.cur.project.id);
+      S.view === 'dash' ? renderDash() : renderList();
+    } catch (e) { toast(e.message, true); }
+  };
+
+  $('#f-archive').onclick = async () => {
+    if (!confirm('이 프로젝트를 보관함으로 옮길까요? 목록에서 숨겨집니다.')) return;
+    try {
+      await api('/api/projects/' + S.cur.project.id, { method:'DELETE' });
+      toast('보관했습니다');
+      closeDetail();
+      await loadProjects();
+      S.view === 'dash' ? renderDash() : renderList();
+    } catch (e) { toast(e.message, true); }
+  };
+}
+
+/* ---------- 진행기록 ---------- */
+function tabTimeline() {
+  const list = S.cur.updates;
+  $('#d-body').innerHTML = `
+    <div class="field"><label>새 기록</label>
+      <div class="grid2">
+        <input type="date" id="u-date" value="${esc(today())}">
+        <select id="u-type">${['일반','회의록','의사결정','이슈'].map(t=>`<option>${t}</option>`).join('')}</select>
+      </div>
+      <input type="text" id="u-title" placeholder="제목 (선택)" style="margin-top:8px">
+      <textarea id="u-content" placeholder="무슨 일이 있었는지 적어두세요" style="margin-top:8px"></textarea>
+      <button class="btn btn-dark btn-sm" id="u-add" style="margin-top:8px">기록 추가</button>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--rule-soft);margin:18px 0">
+    ${list.length ? `<ul class="tl">${list.map((u,i) => `
+      <li class="${i===0?'hi':''}">
+        <div class="hd">
+          <span class="dt">${esc(fmtDate(u.update_date))}</span>
+          <span class="tag">${esc(u.update_type)}</span>
+          ${u.title ? `<span class="ti">${esc(u.title)}</span>` : ''}
+          <span style="flex:1"></span>
+          <span class="dt">${esc(u.author || '')}</span>
+        </div>
+        ${u.content ? `<div class="bd" data-body>${esc(u.content)}</div>
+          ${u.content.length > 400 ? `<button class="more" data-more>더 보기</button>` : ''}` : ''}
+        ${u.next_action ? `<div class="bd" style="margin-top:5px"><b>다음:</b> ${esc(u.next_action)}</div>` : ''}
+      </li>`).join('')}</ul>`
+      : `<div class="empty"><b>아직 기록이 없습니다</b>위에 첫 기록을 남겨보세요.</div>`}`;
+
+  $('#u-add').onclick = async () => {
+    const content = $('#u-content').value.trim();
+    const title   = $('#u-title').value.trim();
+    if (!content && !title) { toast('내용을 입력해주세요', true); return; }
+    try {
+      await apiJSON('/api/updates', 'POST', {
+        project_id: S.cur.project.id,
+        update_date: $('#u-date').value || today(),
+        update_type: $('#u-type').value,
+        title: title || null,
+        content: content || null,
+      });
+      toast('기록을 추가했습니다');
+      await openDetail(S.cur.project.id);
+      $$('.tab').forEach(x => x.classList.toggle('on', x.dataset.tab === 'tl'));
+      S.tab = 'tl'; renderTab();
+    } catch (e) { toast(e.message, true); }
+  };
+
+  $$('[data-more]').forEach(b => b.onclick = () => {
+    const body = b.previousElementSibling;
+    const open = body.classList.toggle('open');
+    b.textContent = open ? '접기' : '더 보기';
+  });
+}
+
+/* ---------- 파일 · 버전 사다리 ---------- */
+function tabFiles() {
+  const list = S.cur.files;
+  $('#d-body').innerHTML = `
+    <div class="field">
+      <label>파일 올리기</label>
+      <div class="grid2">
+        <select id="up-type">${S.cfg.doc_type.map(d=>`<option value="${esc(d.value)}">${esc(d.label)}</option>`).join('')}</select>
+        <input type="text" id="up-note" placeholder="변경 사유 (예: VAT 라인 반영본)">
+      </div>
+      <div class="drop" id="drop">파일을 끌어다 놓거나 눌러서 선택하세요<br>
+        <span style="font-size:11px">같은 이름으로 올리면 새 버전으로 쌓입니다</span></div>
+      <input type="file" id="up-file" class="hidden">
+    </div>
+    <div id="file-list" style="margin-top:16px">
+    ${list.length ? list.map(f => `
+      <div class="file" data-fid="${f.id}">
+        <button class="file-hd" data-toggle="${f.id}">
+          <span class="chev">▶</span>
+          <span class="nm">${esc(f.file_name)}</span>
+          <span class="dt">${esc(f.doc_type)}</span>
+          <span class="vbadge">v${f.version_no}</span>
+          <span class="sz">${esc(fmtKB(f.size_kb))}</span>
+        </button>
+        <div class="ladder-wrap hidden" id="lad-${f.id}"></div>
+      </div>`).join('')
+      : `<div class="empty"><b>파일이 없습니다</b>위에서 첫 파일을 올려보세요.</div>`}
+    </div>`;
+
+  const drop = $('#drop'), input = $('#up-file');
+  drop.onclick = () => input.click();
+  input.onchange = () => input.files[0] && upload(input.files[0]);
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.classList.add('hot');
+  }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.classList.remove('hot');
+  }));
+  drop.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0]; if (f) upload(f);
+  });
+
+  $$('[data-toggle]').forEach(b => b.onclick = () => toggleLadder(Number(b.dataset.toggle), b));
+}
+
+async function toggleLadder(fid, btn) {
+  const wrap = $('#lad-' + fid);
+  if (S.openFiles.has(fid)) {
+    S.openFiles.delete(fid);
+    wrap.classList.add('hidden');
+    btn.classList.remove('open');
+    return;
+  }
+  S.openFiles.add(fid);
+  btn.classList.add('open');
+  wrap.classList.remove('hidden');
+  wrap.innerHTML = `<div class="empty" style="padding:14px">버전 이력을 불러오는 중…</div>`;
+
+  let r;
+  try { r = await api(`/api/files/${fid}/revisions`); }
+  catch (e) { wrap.innerHTML = `<div class="empty" style="padding:14px">${esc(e.message)}</div>`; return; }
+
+  wrap.innerHTML = `<ul class="ladder">${r.revisions.map((v,i) => `
+    <li class="${i===0?'head':''}">
+      <span class="v">v${v.version_no}</span>
+      <span class="when">${esc(fmtDate(v.created_at))}</span>
+      <span class="note ${v.change_note?'':'none'}">${esc(v.change_note || '변경 사유 없음')}</span>
+      <span class="kb">${esc(fmtKB(v.size_kb))}</span>
+      <a href="#" data-dl="${fid}" data-rev="${esc(v.drive_revision_id)}"
+         data-nm="${esc(fileName(fid))}">열기</a>
+    </li>`).join('')}</ul>`;
+
+  wrap.querySelectorAll('[data-dl]').forEach(a => a.onclick = e => {
+    e.preventDefault();
+    download(Number(a.dataset.dl), a.dataset.rev, a.dataset.nm);
+  });
+}
+
+const fileName = fid => (S.cur.files.find(f => f.id === fid) || {}).file_name || 'file';
+
+/** 쿠키 인증이 필요하므로 fetch → blob 으로 받습니다 (Drive 직링크 노출 없음) */
+async function download(fid, rev, name) {
+  toast('내려받는 중…');
+  try {
+    const res = await fetch(`${API}/api/files/${fid}/download?rev=${encodeURIComponent(rev)}`,
+                            { credentials:'include' });
+    if (!res.ok) throw new Error('내려받지 못했습니다');
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (e) { toast(e.message, true); }
+}
+
+async function upload(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('project_id', S.cur.project.id);
+  fd.append('doc_type', $('#up-type').value);
+  fd.append('change_note', $('#up-note').value.trim());
+
+  $('#drop').textContent = `${file.name} 올리는 중…`;
+  try {
+    const r = await api('/api/files/upload', { method:'POST', body:fd });
+    toast(r.version_no > 1 ? `v${r.version_no} 로 저장했습니다` : '올렸습니다');
+    await openDetail(S.cur.project.id);
+    $$('.tab').forEach(x => x.classList.toggle('on', x.dataset.tab === 'file'));
+    S.tab = 'file'; renderTab();
+  } catch (e) {
+    toast(e.message, true);
+    $('#drop').textContent = '파일을 끌어다 놓거나 눌러서 선택하세요';
+  }
+}
+
+/* ---------- 작업 ---------- */
+function tabTasks() {
+  const list = S.cur.tasks;
+  $('#d-body').innerHTML = `
+    <div class="field"><label>새 작업</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="t-title" placeholder="할 일" style="flex:1">
+        <input type="date" id="t-due" style="width:140px">
+        <button class="btn btn-dark btn-sm" id="t-add">추가</button>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+    ${list.length ? list.map(t => {
+      const over = dday(t.due_date) !== null && dday(t.due_date) < 0 && t.status !== 'Done';
+      return `<div class="task ${t.status==='Done'?'done':''}">
+        <input type="checkbox" data-task="${t.id}" ${t.status==='Done'?'checked':''}>
+        <span class="tt">${esc(t.title)}</span>
+        <span class="dd ${over?'over':''}">${t.due_date ? esc(fmtDate(t.due_date)) : ''}</span>
+      </div>`;
+    }).join('') : `<div class="empty"><b>작업이 없습니다</b>위에서 할 일을 추가해보세요.</div>`}
+    </div>`;
+
+  $('#t-add').onclick = async () => {
+    const title = $('#t-title').value.trim();
+    if (!title) { toast('할 일을 입력해주세요', true); return; }
+    try {
+      await apiJSON('/api/tasks', 'POST', {
+        project_id: S.cur.project.id, title,
+        due_date: $('#t-due').value || null,
+        sort_order: S.cur.tasks.length,
+      });
+      await openDetail(S.cur.project.id);
+      $$('.tab').forEach(x => x.classList.toggle('on', x.dataset.tab === 'task'));
+      S.tab = 'task'; renderTab();
+    } catch (e) { toast(e.message, true); }
+  };
+
+  $$('[data-task]').forEach(cb => cb.onchange = async () => {
+    try {
+      await apiJSON('/api/tasks/' + cb.dataset.task, 'PATCH',
+                    { status: cb.checked ? 'Done' : 'To Do' });
+      cb.closest('.task').classList.toggle('done', cb.checked);
+    } catch (e) { toast(e.message, true); cb.checked = !cb.checked; }
+  });
+}
+
+/* ==========================================================================
+   새 프로젝트
+   ========================================================================== */
+const closeModal = () => { $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; };
+
+function openNewModal() {
+  $('#modal').classList.remove('hidden');
+  $('#modal').innerHTML = `
+    <div class="modal-card">
+      <div class="modal-hd"><h3>프로젝트 추가</h3>
+        <button class="d-close" id="m-x" aria-label="닫기">&times;</button></div>
+      <div class="modal-bd">
+        <div class="field"><label>제목</label>
+          <input type="text" id="n-title" placeholder="무엇을 하는 일인가요?"></div>
+        <div class="grid2">
+          <div class="field"><label>카테고리</label><select id="n-category">
+            ${S.cfg.category.map(c=>`<option value="${esc(c.value)}">${esc(c.value)}</option>`).join('')}
+          </select></div>
+          <div class="field"><label>상태</label><select id="n-status">
+            ${S.cfg.status.map(s=>`<option value="${esc(s.value)}"${s.value==='In-Progress'?' selected':''}>${esc(s.label)}</option>`).join('')}
+          </select></div>
+          <div class="field"><label>우선순위</label><select id="n-priority">
+            ${S.cfg.priority.map(s=>`<option value="${esc(s.value)}"${s.value==='Medium'?' selected':''}>${esc(s.label)}</option>`).join('')}
+          </select></div>
+          <div class="field"><label>목표일</label><input type="date" id="n-target_date"></div>
+        </div>
+        <div class="field"><label>요약</label><textarea id="n-summary" placeholder="한두 줄로 적어두면 나중에 찾기 쉽습니다"></textarea></div>
+      </div>
+      <div class="modal-ft">
+        <button class="btn" id="m-cancel">취소</button>
+        <button class="btn btn-dark" id="m-save">추가</button>
+      </div>
+    </div>`;
+
+  $('#m-x').onclick = closeModal;
+  $('#m-cancel').onclick = closeModal;
+  $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+  $('#n-title').focus();
+
+  $('#m-save').onclick = async () => {
+    const title = $('#n-title').value.trim();
+    if (!title) { toast('제목을 입력해주세요', true); return; }
+    try {
+      const r = await apiJSON('/api/projects', 'POST', {
+        title,
+        category:    $('#n-category').value,
+        status:      $('#n-status').value,
+        priority:    $('#n-priority').value,
+        target_date: $('#n-target_date').value || null,
+        summary:     $('#n-summary').value.trim() || null,
+      });
+      closeModal();
+      toast(`${r.code} 추가했습니다`);
+      await loadProjects();
+      S.view === 'dash' ? renderDash() : renderList();
+      openDetail(r.id);
+    } catch (e) { toast(e.message, true); }
+  };
+}
+</script>
+</body>
+</html>
