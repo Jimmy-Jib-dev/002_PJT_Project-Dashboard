@@ -1,0 +1,33 @@
+name = "pjt-dashboard-worker"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+# -----------------------------------------------------------------------------
+# D1 데이터베이스
+# -----------------------------------------------------------------------------
+#  1) wrangler d1 create pjt-db
+#  2) 출력된 database_id 를 아래에 붙여넣기
+# -----------------------------------------------------------------------------
+[[d1_databases]]
+binding       = "DB"
+database_name = "pjt-db"
+database_id   = "<<< wrangler d1 create pjt-db 실행 후 출력값 >>>"
+
+# -----------------------------------------------------------------------------
+# 공개 변수 (저장소에 올라가도 되는 값만)
+# -----------------------------------------------------------------------------
+[vars]
+APP_URL        = "https://jimmy-jib-dev.github.io/002_PJT_Project-Dashboard/"
+ALLOWED_ORIGIN = "https://jimmy-jib-dev.github.io"
+
+# -----------------------------------------------------------------------------
+# 비밀 값은 여기 쓰지 말고 wrangler secret put 으로 등록하세요.
+# (이 파일은 GitHub 에 올라갑니다)
+#
+#   wrangler secret put GOOGLE_CLIENT_ID
+#   wrangler secret put GOOGLE_CLIENT_SECRET
+#   wrangler secret put DRIVE_REFRESH_TOKEN
+#   wrangler secret put DRIVE_ROOT_FOLDER_ID
+#   wrangler secret put SESSION_SECRET
+#   wrangler secret put ALLOWED_EMAILS
+# -----------------------------------------------------------------------------
