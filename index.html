@@ -624,7 +624,14 @@ $('#btn-logout').onclick = () => {
   try {
     const me = await api('/api/me');
     S.me = me.user;
-  } catch { showGate(); return; }
+  } catch (e) {
+    console.error('[PJT] 세션 확인 실패:', e);
+    // 401 은 api() 에서 이미 안내 문구를 띄웁니다.
+    if (e.message !== '401') {
+      showGate(`서버에 연결하지 못했습니다 — ${e.message}`);
+    }
+    return;
+  }
 
   $('#gate').classList.add('hidden');
   $('#app').classList.remove('hidden');
