@@ -51,27 +51,54 @@ a{color:var(--signal);text-decoration:none}
   color:var(--mute);
 }
 
-/* ==================== 로그인 ==================== */
+/* ==================== 로그인 ====================
+   OneNote 섹션 탭의 색 띠를 카드 상단 밴드로 옮겨왔습니다.
+   이관해 올 24개 섹션이 그대로 한 줄에 들어갑니다. */
 #gate{
   height:100%;display:flex;align-items:center;justify-content:center;
-  background:var(--paper);
+  background:var(--paper);padding:20px;
 }
 .gate-card{
-  width:min(360px,90vw);background:var(--card);border:1px solid var(--rule);
-  border-radius:var(--r);padding:38px 32px;box-shadow:var(--shadow);
+  width:min(392px,100%);background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;
 }
+/* 섹션 색 밴드 */
+.gate-band{display:flex;height:5px}
+.gate-band i{flex:1;display:block}
+.gate-in{padding:32px 30px 30px}
+
 .gate-mark{
-  font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-.02em;
-  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+  font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.035em;
+  line-height:1;margin-bottom:12px;
 }
-.gate-mark i{width:5px;height:26px;background:var(--signal);border-radius:2px;display:block}
-.gate-card p{color:var(--graphite);margin-bottom:26px;font-size:12.5px}
+.gate-lead{font-size:14px;font-weight:600;letter-spacing:-.01em;margin-bottom:5px}
+.gate-sub{color:var(--graphite);font-size:12.5px;line-height:1.6;margin-bottom:22px}
+
+/* 이 시스템이 담는 것 — 구조 자체가 설명이 되도록 */
+.gate-list{list-style:none;margin-bottom:24px;border-top:1px solid var(--rule-soft)}
+.gate-list li{
+  display:flex;align-items:baseline;gap:10px;padding:7px 0;
+  border-bottom:1px solid var(--rule-soft);font-size:12px;
+}
+.gate-list .k{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--mute);width:62px;flex-shrink:0;
+}
+.gate-list .v{color:var(--graphite)}
+
 .btn-primary{
   width:100%;background:var(--ink);color:#fff;border-radius:var(--r);
   padding:11px;font-weight:600;font-size:13px;transition:background .15s;
 }
 .btn-primary:hover{background:#2b323d}
-#gate-msg{margin-top:16px;font-size:12px;color:var(--alert);min-height:16px}
+.btn-primary:disabled{background:var(--mute);cursor:default}
+.gate-foot{
+  margin-top:14px;font-size:11px;color:var(--mute);text-align:center;line-height:1.6;
+}
+#gate-msg{
+  margin-top:14px;font-size:12px;color:var(--alert);min-height:16px;
+  line-height:1.5;text-align:center;
+}
 
 /* ==================== 셸 ==================== */
 #app{height:100%;display:grid;grid-template-rows:52px 1fr;grid-template-columns:216px 1fr}
@@ -364,10 +391,22 @@ main{overflow-y:auto;padding:22px 26px 60px}
 <!-- ==================== 로그인 ==================== -->
 <div id="gate">
   <div class="gate-card">
-    <div class="gate-mark"><i></i>PJT</div>
-    <p>IT 프로젝트 관리</p>
-    <button class="btn-primary" id="btn-login">Google 계정으로 로그인</button>
-    <div id="gate-msg"></div>
+    <div class="gate-band" id="gate-band"></div>
+    <div class="gate-in">
+      <div class="gate-mark">PJT</div>
+      <div class="gate-lead">IT 프로젝트 기록장</div>
+      <div class="gate-sub">OneNote 에 흩어져 있던 프로젝트를 한곳에 모아둡니다.</div>
+
+      <ul class="gate-list">
+        <li><span class="k">프로젝트</span><span class="v">상태 · 기한 · 담당 · 진행률</span></li>
+        <li><span class="k">진행기록</span><span class="v">날짜별 타임라인과 의사결정</span></li>
+        <li><span class="k">파일</span><span class="v">같은 이름으로 올리면 버전이 쌓입니다</span></li>
+      </ul>
+
+      <button class="btn-primary" id="btn-login">Google 계정으로 로그인</button>
+      <div class="gate-foot">허용된 계정만 들어올 수 있습니다</div>
+      <div id="gate-msg"></div>
+    </div>
   </div>
 </div>
 
@@ -439,6 +478,33 @@ main{overflow-y:auto;padding:22px 26px 60px}
    ========================================================================== */
 const API = 'https://pjt-dashboard-worker.jimmyjib-dev.workers.dev';
 
+/* ---- 세션 토큰 --------------------------------------------------------------
+   쿠키를 쓰지 않습니다. SPA(github.io)와 Worker(workers.dev)는 서로 다른
+   사이트라 쿠키가 서드파티로 분류되고, 크롬 시크릿 모드는 이를 차단합니다.
+   로그인 후 Worker 가 #t=<토큰> 으로 돌려주면 받아서 보관하고,
+   이후 모든 요청에 Authorization 헤더로 실어 보냅니다.                       */
+const TOKEN_KEY = 'pjt_token';
+let TOKEN = '';
+
+try {
+  const m = location.hash.match(/[#&]t=([^&]+)/);
+  if (m) {
+    TOKEN = decodeURIComponent(m[1]);
+    localStorage.setItem(TOKEN_KEY, TOKEN);
+    history.replaceState(null, '', location.pathname + location.search);  // 주소창에서 즉시 제거
+  } else {
+    TOKEN = localStorage.getItem(TOKEN_KEY) || '';
+  }
+} catch { /* 저장소 접근 불가 시 세션 동안만 메모리 유지 */ }
+
+const authHeaders = (extra = {}) =>
+  TOKEN ? { ...extra, Authorization: 'Bearer ' + TOKEN } : extra;
+
+function clearToken() {
+  TOKEN = '';
+  try { localStorage.removeItem(TOKEN_KEY); } catch {}
+}
+
 /* ==========================================================================
    유틸
    ========================================================================== */
@@ -484,8 +550,15 @@ function toast(msg, bad) {
 }
 
 async function api(path, opts = {}) {
-  const res = await fetch(API + path, { credentials:'include', ...opts });
-  if (res.status === 401) { showGate('세션이 만료됐습니다. 다시 로그인해주세요.'); throw new Error('401'); }
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: authHeaders(opts.headers || {}),
+  });
+  if (res.status === 401) {
+    clearToken();
+    showGate('세션이 만료됐습니다. 다시 로그인해주세요.');
+    throw new Error('401');
+  }
   if (!res.ok) {
     let m = res.statusText;
     try { m = (await res.json()).error || m; } catch {}
@@ -515,16 +588,39 @@ const statusMeta = v => S.cfg.status.find(c => c.value === v) || { label:v, colo
 /* ==========================================================================
    부팅
    ========================================================================== */
+/* 로그인 카드 상단 색 밴드 — 이관해 올 OneNote 섹션 색을 그대로 씁니다.
+   (config 는 로그인 후에 내려오므로 여기서만 하드코딩) */
+const BAND = ['#2563eb','#0891b2','#dc2626','#7c3aed','#ea580c','#0d9488',
+              '#1d4ed8','#65a30d','#475569','#c026d3','#0284c7','#7e22ce',
+              '#166534','#b45309','#991b1b','#a16207','#334155','#be185d',
+              '#0369a1','#b91c1c','#059669','#4338ca','#57534e','#15803d'];
+$('#gate-band').innerHTML = BAND.map(c => `<i style="background:${c}"></i>`).join('');
+
 function showGate(msg) {
   $('#gate').classList.remove('hidden');
   $('#app').classList.add('hidden');
+  const btn = $('#btn-login');
+  btn.disabled = false;
+  btn.textContent = 'Google 계정으로 로그인';
   $('#gate-msg').textContent = msg || '';
 }
 
-$('#btn-login').onclick = () => { location.href = API + '/auth/login'; };
-$('#btn-logout').onclick = () => { location.href = API + '/auth/logout'; };
+$('#btn-login').onclick = e => {
+  e.target.disabled = true;
+  e.target.textContent = '이동하는 중…';
+  location.href = API + '/auth/login';
+};
+$('#btn-logout').onclick = () => {
+  clearToken();
+  location.reload();
+};
 
 (async function boot() {
+  if (!TOKEN) { showGate(); return; }
+
+  $('#btn-login').disabled = true;
+  $('#btn-login').textContent = '확인하는 중…';
+
   try {
     const me = await api('/api/me');
     S.me = me.user;
@@ -981,7 +1077,7 @@ async function download(fid, rev, name) {
   toast('내려받는 중…');
   try {
     const res = await fetch(`${API}/api/files/${fid}/download?rev=${encodeURIComponent(rev)}`,
-                            { credentials:'include' });
+                            { headers: authHeaders() });
     if (!res.ok) throw new Error('내려받지 못했습니다');
     const url = URL.createObjectURL(await res.blob());
     const a = document.createElement('a');

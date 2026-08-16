@@ -29,7 +29,7 @@ function corsHeaders(env) {
   return {
     'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
     'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Credentials': 'true',
   };
 }
@@ -57,12 +57,29 @@ async function createSession(env, email, name) {
   return `${payload}.${await hmac(env.SESSION_SECRET, payload)}`;
 }
 
+/**
+ * 세션 검증.
+ *  1순위: Authorization: Bearer <token>
+ *  2순위: 쿠키
+ *
+ * Bearer 를 먼저 보는 이유 — SPA(github.io)와 Worker(workers.dev)는 서로 다른
+ * 사이트라 쿠키가 "서드파티 쿠키"가 됩니다. 크롬 시크릿 모드는 이를 기본
+ * 차단하고 일반 모드에서도 점차 없어지는 중이라, 헤더 방식이 안전합니다.
+ */
 async function verifySession(env, request) {
-  const cookie = request.headers.get('Cookie') || '';
-  const m = cookie.match(new RegExp(`${SESSION_COOKIE}=([^;]+)`));
-  if (!m) return null;
+  let raw = null;
 
-  const [payload, sig] = m[1].split('.');
+  const auth = request.headers.get('Authorization') || '';
+  if (auth.startsWith('Bearer ')) {
+    raw = auth.slice(7).trim();
+  } else {
+    const cookie = request.headers.get('Cookie') || '';
+    const m = cookie.match(new RegExp(`${SESSION_COOKIE}=([^;]+)`));
+    if (m) raw = m[1];
+  }
+  if (!raw) return null;
+
+  const [payload, sig] = raw.split('.');
   if (!payload || !sig) return null;
   if (sig !== await hmac(env.SESSION_SECRET, payload)) return null;
 
@@ -217,10 +234,14 @@ export default {
         }
 
         const session = await createSession(env, claims.email, claims.name || claims.email);
+
+        // 토큰은 URL 프래그먼트(#)로 전달합니다. 프래그먼트는 서버로 전송되지
+        // 않으므로 로그에 남지 않고, SPA 가 읽은 뒤 즉시 주소창에서 지웁니다.
+        // 쿠키도 같이 심어두지만 서드파티 차단 환경에서는 무시됩니다.
         return new Response(null, {
           status: 302,
           headers: {
-            Location: env.APP_URL,
+            Location: `${env.APP_URL}#t=${encodeURIComponent(session)}`,
             'Set-Cookie': `${SESSION_COOKIE}=${session}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${SESSION_TTL}`,
           },
         });
